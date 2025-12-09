@@ -37,7 +37,8 @@ public class CosManager {
     }
 
     /**
-     * 上传对象（附带图片信息）
+     * 上传对象（附带图片信息）git config user.email
+     * git config user.name
      *
      * @param key  唯一键
      * @param file 文件
@@ -59,6 +60,17 @@ public class CosManager {
         compressRule.setBucket(cosClientConfig.getBucket());
         compressRule.setRule("imageMogr2/format/webp");
         rules.add(compressRule);
+
+        //缩略图处理 仅对 》 20kb 的图片 生成
+        if (FileUtil.size(file) > 2 * 1024) {
+            PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
+            thumbnailRule.setFileId(thumbnailKey);
+            thumbnailRule.setBucket(cosClientConfig.getBucket());
+            //缩放规则 /thumbnail/<width>x<height> (如果大于原图规则，则不处理）
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
+            rules.add(thumbnailRule);
+        }
 
         // 构造处理参数
         picOperations.setRules(rules);

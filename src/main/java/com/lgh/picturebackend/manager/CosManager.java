@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import com.lgh.picturebackend.config.CosClientConfig;
 import com.qcloud.cos.COSClient;
 
+import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
@@ -76,6 +77,16 @@ public class CosManager {
         picOperations.setRules(rules);
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
+    }
+
+
+    /**
+     * 删除对象
+     *
+     * @param key 唯一键
+     */
+    public void deleteObject(String key) {
+        cosClient.deleteObject(cosClientConfig.getBucket(),key);
     }
 
 }

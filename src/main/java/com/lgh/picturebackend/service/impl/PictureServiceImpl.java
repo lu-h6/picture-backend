@@ -4,12 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lgh.picturebackend.exception.BusinessException;
 import com.lgh.picturebackend.exception.ErrorCode;
 import com.lgh.picturebackend.exception.ThrowUtils;
-import com.lgh.picturebackend.manager.FileManager;
+import com.lgh.picturebackend.manager.CosManager;
 import com.lgh.picturebackend.manager.upload.FilePictureUpload;
 import com.lgh.picturebackend.manager.upload.PictureUploadTemplate;
 import com.lgh.picturebackend.manager.upload.UrlPictureUpload;
@@ -32,8 +33,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -62,6 +63,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+
+    @Resource
+    private CosManager cosManager;
 
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
@@ -387,6 +391,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return uploadCount;
     }
 
+
+    /**
+     * 清理图片文件
+     * @param oldPicture
+     */
+    @Override
+    @Async
+    public void clearPictureFile(Picture oldPicture){
+        //判断图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery().eq(Picture::getUrl, pictureUrl).count();
+        if (count > 1){
+            return;
+        }
+        //删除图片
+        cosManager.deleteObject(pictureUrl);
+        //删除缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)){
+            cosManager.deleteObject(thumbnailUrl);
+        }
+    }
 }
 
 

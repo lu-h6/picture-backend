@@ -2,6 +2,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    #cookie 30 天后过期
+    session:
+      cookie:
+        max-age: 2592000
 
 spring:
   application:
@@ -17,11 +21,17 @@ spring:
   servlet:
     multipart:
       max-file-size: 10MB
+  #Redis数据库配置
   redis:
     database: 3
     host: 127.0.0.1
     port: 6379
     connect-timeout: 5000
+  #Session配置
+  session:
+    store-type: redis
+    #30天后过期
+    timeout: 2592000
 mybatis-plus:
   configuration:
     # MyBatis 配置

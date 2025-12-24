@@ -10,7 +10,6 @@ import com.lgh.picturebackend.model.dto.picture.PictureUploadRequest;
 import com.lgh.picturebackend.model.entity.Picture;
 import com.lgh.picturebackend.model.entity.User;
 import com.lgh.picturebackend.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 

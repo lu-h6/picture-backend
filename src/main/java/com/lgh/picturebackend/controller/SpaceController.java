@@ -16,6 +16,7 @@ import com.lgh.picturebackend.exception.ThrowUtils;
 import com.lgh.picturebackend.model.dto.space.*;
 import com.lgh.picturebackend.model.entity.Space;
 import com.lgh.picturebackend.model.entity.User;
+import com.lgh.picturebackend.model.enums.SpaceLevelEnum;
 import com.lgh.picturebackend.model.vo.SpaceVO;
 import com.lgh.picturebackend.service.SpaceService;
 import com.lgh.picturebackend.service.UserService;
@@ -32,7 +33,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -44,6 +47,13 @@ public class SpaceController {
     @Resource
     private SpaceService spaceService;
 
+    @PostMapping("/add")
+    public BaseResponse<Long> addSpace(@RequestBody SpaceAddRequest spaceAddRequest,HttpServletRequest request){
+        ThrowUtils.throwIf(spaceAddRequest == null,ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        long newId = spaceService.addSpace(spaceAddRequest, loginUser);
+        return ResultUtils.success(newId);
+    }
     /**
      * 删除空间
      */
@@ -183,4 +193,15 @@ public class SpaceController {
         return ResultUtils.success(true);
     }
 
+    @GetMapping("/list/level")
+    public BaseResponse<List<SpaceLevel>> listSpaceLevel(){
+        List<SpaceLevel> spaceLevelList = Arrays.stream(SpaceLevelEnum.values())
+                .map(spaceLevelEnum -> new SpaceLevel(
+                        spaceLevelEnum.getValue(),
+                        spaceLevelEnum.getText(),
+                        spaceLevelEnum.getMaxCount(),
+                        spaceLevelEnum.getMaxSize()
+                )).collect(Collectors.toList());
+        return ResultUtils.success(spaceLevelList);
+    }
 }

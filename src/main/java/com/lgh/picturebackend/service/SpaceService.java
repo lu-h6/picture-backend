@@ -2,9 +2,11 @@ package com.lgh.picturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lgh.picturebackend.model.dto.space.SpaceAddRequest;
 import com.lgh.picturebackend.model.dto.space.SpaceQueryRequest;
 import com.lgh.picturebackend.model.entity.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lgh.picturebackend.model.entity.User;
 import com.lgh.picturebackend.model.vo.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +18,13 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface SpaceService extends IService<Space> {
 
+    /**
+     * 创建空间
+     * @param spaceAddRequest
+     * @param loginUser
+     * @return
+     */
+    long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
     /**
      * 校验空间
      *

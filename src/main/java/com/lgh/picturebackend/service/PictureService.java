@@ -3,10 +3,7 @@ package com.lgh.picturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lgh.picturebackend.model.dto.picture.PictureQueryRequest;
-import com.lgh.picturebackend.model.dto.picture.PictureReviewRequest;
-import com.lgh.picturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.lgh.picturebackend.model.dto.picture.PictureUploadRequest;
+import com.lgh.picturebackend.model.dto.picture.*;
 import com.lgh.picturebackend.model.entity.Picture;
 import com.lgh.picturebackend.model.entity.User;
 import com.lgh.picturebackend.model.vo.PictureVO;
@@ -81,4 +78,16 @@ public interface PictureService extends IService<Picture> {
      * @param oldPicture
      */
     void clearPictureFile(Picture oldPicture);
+
+    void deletePicture(long pictureId, User loginUser);
+
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+
+
+    /**
+     * 校验图片
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser,Picture picture);
 }

@@ -76,6 +76,11 @@ public class Picture implements Serializable {
      * 创建用户 id
      */
     private Long userId;
+
+    /**
+     * 空间id
+     */
+    private Long spaceId;
     /**
      * 状态：0-待审核; 1-通过; 2-拒绝
      */

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lgh.picturebackend.exception.BusinessException;
 import com.lgh.picturebackend.exception.ErrorCode;
 import com.lgh.picturebackend.exception.ThrowUtils;
+import com.lgh.picturebackend.model.dto.space.SpaceAddRequest;
 import com.lgh.picturebackend.model.dto.space.SpaceQueryRequest;
 import com.lgh.picturebackend.model.entity.Space;
 import com.lgh.picturebackend.model.entity.User;
@@ -18,7 +19,10 @@ import com.lgh.picturebackend.model.vo.UserVO;
 import com.lgh.picturebackend.service.SpaceService;
 import com.lgh.picturebackend.mapper.SpaceMapper;
 import com.lgh.picturebackend.service.UserService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +40,63 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Resource
     private UserService userService;
+
+    //编程式事务
+    @Resource
+    private TransactionTemplate transactionTemplate;
+
+    /**
+     * 创建空间
+     * @param spaceAddRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public long addSpace(SpaceAddRequest spaceAddRequest, User loginUser) {
+        // 1.填充参数默认值
+        Space space = new Space();
+        BeanUtils.copyProperties(spaceAddRequest,space);
+        if (StrUtil.isBlank(space.getSpaceName())){
+            space.setSpaceName("默认空间");
+        }
+        if (space.getSpaceLevel() == null){
+            space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
+        }
+        //填充容量和大小
+        this.fillSpaceBySpaceLevel(space);
+        // 2.校验参数
+        this.validSpace(space,true);
+        // 3.校验权限，非会员只能创建普通级别的空间
+        Long userId = loginUser.getId();
+        space.setUserId(userId);
+        if (SpaceLevelEnum.COMMON.getValue() != space.getSpaceLevel() && !userService.isAdmin(loginUser)){
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"无权限创建指定级别的空间");
+        }
+        // 4.控制同一用户只能有一个私有空间
+        String lock = String.valueOf(userId).intern();
+        synchronized (lock){
+            Long newSpaceId = transactionTemplate.execute(status -> {
+                // 判断是否已有空间
+                boolean exists = this.lambdaQuery()
+                        .eq(Space::getUserId, userId)
+                        .exists();
+                //如果已有空间就不能创建
+                ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户只能有一个私有空间");
+                //boolean result = this.save(space);
+                //ThrowUtils.throwIf(result, ErrorCode.OPERATION_ERROR, "保存空间到数据库失败");
+                try {
+                    boolean result = this.save(space);
+                } catch (DataAccessException e) {
+                    log.error( e.getMessage(), e);
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR,"保存空间到数据库失败");
+                }
+
+                return space.getId();
+            });
+            return newSpaceId;
+
+        }
+    }
 
     @Override
     public void validSpace(Space space, boolean add) {

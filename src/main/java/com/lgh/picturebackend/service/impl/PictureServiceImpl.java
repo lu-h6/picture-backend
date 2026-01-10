@@ -365,9 +365,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param picture
      * @param loginUser
      */
+/*
     @Override
     public void fillReviewParams(Picture picture, User loginUser) {
-        Long userId = loginUser.getId();
         if (userService.isAdmin(loginUser) || (loginUser.getId()).equals(picture.getUserId())) {
             picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
             picture.setReviewerId(loginUser.getId());
@@ -379,6 +379,54 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         }
     }
+*/
+    @Override
+    public void fillReviewParams(Picture picture, User loginUser) {
+        Long loginUserId = loginUser.getId();
+        Long pictureUserId = picture.getUserId();
+        Long spaceId = picture.getSpaceId();
+
+        log.info("开始填充审核参数：userId={}, spaceId={}, isAdmin={}",
+                loginUserId, spaceId, userService.isAdmin(loginUser));
+
+        boolean isPass = false;
+        String passMessage = "自动审核通过";
+
+        if (userService.isAdmin(loginUser)) {
+            log.info("命中规则：管理员，自动通过");
+            isPass = true;
+        }
+        else if (ObjUtil.equal(loginUserId, pictureUserId)) {
+            if (spaceId == null) {
+                log.info("命中规则：公共空间本人上传，自动通过");
+                isPass = true;
+            } else {
+                Space space = spaceService.getById(spaceId);
+                log.info("私有空间检查：查询到的 space={}, spaceOwnerId={}",
+                        space, space == null ? "null" : space.getUserId());
+
+                if (space != null && ObjUtil.equal(space.getUserId(), loginUserId)) {
+                    log.info("命中规则：空间所有者，自动通过");
+                    isPass = true;
+                    passMessage = "空间所有者上传，自动审核通过";
+                } else {
+                    log.warn("未通过审核：space 为空 或 空间所有者不匹配。期望={}, 实际={}",
+                            loginUserId, space == null ? "null" : space.getUserId());
+                }
+            }
+        }
+
+        if (isPass) {
+            picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            picture.setReviewerId(loginUserId);
+            picture.setReviewTime(new Date());
+            picture.setReviewMessage(passMessage);
+        } else {
+            picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
+            picture.setReviewMessage("等待管理员审核");
+        }
+    }
+
 
     @Override
     public Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User userLogin) {
@@ -565,6 +613,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param pictureEditRequest
      * @param loginUser
      */
+/*
     @Override
     public void editPicture(PictureEditRequest pictureEditRequest, User loginUser) {
         // 在此处将实体类和 DTO 进行转换
@@ -588,6 +637,40 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         boolean result = this.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
+*/
+    @Override
+    public void editPicture(PictureEditRequest pictureEditRequest, User loginUser) {
+        // 1. 查询旧数据
+        long id = pictureEditRequest.getId();
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+
+        // 2. 校验权限
+        checkPictureAuth(loginUser, oldPicture);
+
+        // 3. 构建更新对象
+        Picture picture = new Picture();
+        BeanUtils.copyProperties(pictureEditRequest, picture);
+        // 【修复点】手动保留旧数据中的关键字段，避免 fillReviewParams 判断失效
+        picture.setUserId(oldPicture.getUserId());
+        picture.setSpaceId(oldPicture.getSpaceId());
+
+        // 注意将 list 转为 string
+        picture.setTags(JSONUtil.toJsonStr(pictureEditRequest.getTags()));
+        // 设置编辑时间
+        picture.setEditTime(new Date());
+
+        // 4. 数据校验
+        this.validPicture(picture);
+
+        // 5. 补充审核参数 (此时 picture 中已有 userId 和 spaceId，逻辑可正常判断)
+        this.fillReviewParams(picture, loginUser);
+
+        // 6. 操作数据库
+        boolean result = this.updateById(picture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+    }
+
 
     @Override
     public void checkPictureAuth(User loginUser, Picture picture) {

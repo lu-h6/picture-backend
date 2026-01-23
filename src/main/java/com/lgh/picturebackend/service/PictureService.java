@@ -9,6 +9,7 @@ import com.lgh.picturebackend.model.entity.User;
 import com.lgh.picturebackend.model.vo.PictureVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author luguihong
@@ -90,4 +91,6 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void checkPictureAuth(User loginUser,Picture picture);
+
+    List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
 }

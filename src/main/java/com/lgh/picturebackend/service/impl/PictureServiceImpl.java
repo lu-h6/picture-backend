@@ -7,6 +7,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lgh.picturebackend.api.aliyunai.AliYunAiApi;
+import com.lgh.picturebackend.api.aliyunai.modal.CreateOutPaintingTaskRequest;
+import com.lgh.picturebackend.api.aliyunai.modal.CreateOutPaintingTaskResponse;
 import com.lgh.picturebackend.exception.BusinessException;
 import com.lgh.picturebackend.exception.ErrorCode;
 import com.lgh.picturebackend.exception.ThrowUtils;
@@ -73,6 +76,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
@@ -804,6 +810,36 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             log.error("名称解析错误", e);
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "名称解析错误");
         }
+    }
+
+    /**
+     * 创建图片外画任务
+     *
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     */
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在"));
+        // 校验权限
+        checkPictureAuth(loginUser, picture);
+        // 创建任务
+        // 示例：在调用 AI 接口前增加 URL 校验
+        if (picture.getUrl() == null || !picture.getUrl().startsWith("http")) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"图片链接格式错误");
+        }
+// 建议增加 HTTP HEAD 请求检查链接是否可达
+
+        CreateOutPaintingTaskRequest createOutPaintingTaskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        createOutPaintingTaskRequest.setInput(input);
+        CreateOutPaintingTaskRequest.Parameters parameters = createOutPaintingTaskRequest.getParameters();
+        createOutPaintingTaskRequest.setParameters(parameters);
+        return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
     }
 
 }

@@ -16,8 +16,8 @@ spring:
     url: jdbc:mysql://localhost:3306/picture?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: 123456
-#  profiles:
-#    active: local
+  #  profiles:
+  #    active: local
   servlet:
     multipart:
       max-file-size: 10MB
@@ -65,3 +65,7 @@ knife4j:
 #    secretKey: xxx
 #    region: xxx
 #    bucket: xxx
+
+##阿里云AI配置
+aliYunAi:
+  apiKey: sk-3af90cf03bc241c8b5908cfe1d1403d3

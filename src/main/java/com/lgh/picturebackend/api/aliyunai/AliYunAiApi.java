@@ -10,7 +10,6 @@ import com.lgh.picturebackend.api.aliyunai.modal.CreateOutPaintingTaskResponse;
 import com.lgh.picturebackend.api.aliyunai.modal.GetOutPaintingTaskResponse;
 import com.lgh.picturebackend.exception.BusinessException;
 import com.lgh.picturebackend.exception.ErrorCode;
-import com.lgh.picturebackend.exception.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

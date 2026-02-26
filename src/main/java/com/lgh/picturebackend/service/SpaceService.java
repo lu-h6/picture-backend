@@ -20,11 +20,13 @@ public interface SpaceService extends IService<Space> {
 
     /**
      * 创建空间
+     *
      * @param spaceAddRequest
      * @param loginUser
      * @return
      */
     long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
+
     /**
      * 校验空间
      *
@@ -51,5 +53,18 @@ public interface SpaceService extends IService<Space> {
      */
     QueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest);
 
+    /**
+     * 填充空间信息
+     *
+     * @param space 空间
+     */
     void fillSpaceBySpaceLevel(Space space);
+
+    /**
+     * 校验空间权限
+     *
+     * @param space     空间
+     * @param loginUser 登录用户
+     */
+    void checkSpaceAuth(Space space, User loginUser);
 }

@@ -54,6 +54,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 创建空间
+     *
      * @param spaceAddRequest
      * @param loginUser
      * @return
@@ -62,46 +63,46 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public long addSpace(SpaceAddRequest spaceAddRequest, User loginUser) {
         // 1.填充参数默认值
         Space space = new Space();
-        BeanUtils.copyProperties(spaceAddRequest,space);
-        if (StrUtil.isBlank(space.getSpaceName())){
+        BeanUtils.copyProperties(spaceAddRequest, space);
+        if (StrUtil.isBlank(space.getSpaceName())) {
             space.setSpaceName("默认空间");
         }
-        if (space.getSpaceLevel() == null){
+        if (space.getSpaceLevel() == null) {
             space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
         }
-        if (space.getSpaceType() == null){
+        if (space.getSpaceType() == null) {
             space.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
         }
         //填充容量和大小
         this.fillSpaceBySpaceLevel(space);
         // 2.校验参数
-        this.validSpace(space,true);
+        this.validSpace(space, true);
         // 3.校验权限，非会员只能创建普通级别的空间
         Long userId = loginUser.getId();
         space.setUserId(userId);
-        if (SpaceLevelEnum.COMMON.getValue() != space.getSpaceLevel() && !userService.isAdmin(loginUser)){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"无权限创建指定级别的空间");
+        if (SpaceLevelEnum.COMMON.getValue() != space.getSpaceLevel() && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限创建指定级别的空间");
         }
         // 4.控制同一用户只能有一个私有空间，以及一个团队空间
         String lock = String.valueOf(userId).intern();
-        synchronized (lock){
+        synchronized (lock) {
             Long newSpaceId = transactionTemplate.execute(status -> {
                 // 判断是否已有空间
                 boolean exists = this.lambdaQuery()
                         .eq(Space::getUserId, userId)
-                        .eq(Space::getSpaceType , spaceAddRequest.getSpaceType())
+                        .eq(Space::getSpaceType, spaceAddRequest.getSpaceType())
                         .exists();
                 //如果已有空间就不能创建
                 ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户每类空间只能创建一个");
                 boolean result = this.save(space);
                 ThrowUtils.throwIf(result, ErrorCode.OPERATION_ERROR, "保存空间到数据库失败");
-                if (SpaceTypeEnum.TEAM.getValue() == space.getSpaceType()){
+                if (SpaceTypeEnum.TEAM.getValue() == space.getSpaceType()) {
                     SpaceUser spaceUser = new SpaceUser();
                     spaceUser.setSpaceId(space.getId());
                     spaceUser.setUserId(userId);
                     spaceUser.setSpaceRole(SpaceRoleEnum.ADMIN.getValue());
-                     result = spaceUserService.save(spaceUser);
-                     ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "创建团队成员空间记录失败");
+                    result = spaceUserService.save(spaceUser);
+                    ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "创建团队成员空间记录失败");
 
                 }
 

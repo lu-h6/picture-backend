@@ -11,7 +11,7 @@
       "description": "查看空间中的图片内容"
     },
     {
-      "key": "picture:upload",]
+      "key": "picture:upload",
       "name": "上传图片",
       "description": "上传图片到空间中"
     },

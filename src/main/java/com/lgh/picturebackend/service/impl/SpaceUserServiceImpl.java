@@ -22,6 +22,7 @@ import com.lgh.picturebackend.service.SpaceUserService;
 import com.lgh.picturebackend.mapper.SpaceUserMapper;
 import com.lgh.picturebackend.service.UserService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -46,6 +47,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
     private UserService userService;
 
     @Resource
+    @Lazy
     private SpaceService spaceService;
 
 
@@ -98,7 +100,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Long spaceId = spaceUser.getSpaceId();
         if (spaceId != null && spaceId > 0){
             Space space = spaceService.getById(spaceId);
-            SpaceVO spaceVO = spaceService.getSpaceVO(space);
+            SpaceVO spaceVO = spaceService.getSpaceVO(space,request);
             spaceUserVO.setSpace(spaceVO);
         }
         return spaceUserVO;
@@ -132,7 +134,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
             if (spaceIdSpaceListMap.containsKey(spaceId)){
                 space = spaceIdSpaceListMap.get(spaceId).get(0);
             }
-            spaceUserVO.setSpace(spaceService.getSpaceVO(space));
+            spaceUserVO.setSpace(SpaceVO.objToVo(space));
         });
         return spaceUserVOList;
     }

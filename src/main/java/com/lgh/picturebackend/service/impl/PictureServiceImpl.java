@@ -549,36 +549,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param loginUser
      */
     @Override
-//    public void deletePicture(long pictureId, User loginUser) {
-//        ThrowUtils.throwIf(pictureId <= 0, ErrorCode.PARAMS_ERROR);
-//        ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
-//        // 判断是否存在
-//        Picture oldPicture = this.getById(pictureId);
-//        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
-//        // 校验权限
-//        checkPictureAuth(loginUser, oldPicture);
-//        //开启事务
-//        transactionTemplate.execute(status -> {
-//            //插入数据
-//            boolean result = this.removeById(pictureId);
-//            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
-//            //更新空间的使用额度，释放额度
-//            boolean update = spaceService
-//                    .lambdaUpdate()
-//                    .eq(Space::getId, oldPicture.getSpaceId())
-//                    .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
-//                    .setSql("totalCount = totalCount + 1")
-//                    .update();
-//            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
-//            return true;
-//        });
-//        // 操作数据库
-//        boolean result = this.removeById(pictureId);
-//        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-//        // 异步清理文件
-//        this.clearPictureFile(oldPicture);
-//    }
-
     public void deletePicture(long pictureId, User loginUser) {
         ThrowUtils.throwIf(pictureId <= 0, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
@@ -588,7 +558,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 2. 校验权限
-        checkPictureAuth(loginUser, oldPicture);
+        //checkPictureAuth(loginUser, oldPicture);
 
         // 3. 开启事务处理数据库操作
         transactionTemplate.execute(status -> {
@@ -656,7 +626,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 2. 校验权限
-        checkPictureAuth(loginUser, oldPicture);
+        //checkPictureAuth(loginUser, oldPicture);
 
         // 3. 构建更新对象
         Picture picture = new Picture();
@@ -825,7 +795,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = Optional.ofNullable(this.getById(pictureId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在"));
         // 校验权限
-        checkPictureAuth(loginUser, picture);
+        //checkPictureAuth(loginUser, picture);
         // 创建任务
         // 示例：在调用 AI 接口前增加 URL 校验
         if (picture.getUrl() == null || !picture.getUrl().startsWith("http")) {
